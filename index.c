@@ -167,10 +167,20 @@ int index_load(Index *index) {
 //
 // Returns 0 on success, -1 on error.
 int index_save(const Index *index) {
-    // TODO: Implement atomic index saving
-    // (See Lab Appendix for logical steps)
-    (void)index;
-    return -1;
+    if (!index) return -1;
+
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "%s/index", PES_DIR);
+
+    FILE *f = fopen(path, "wb");
+    if (!f) return -1;
+
+    // Write the number of files, then the file data itself
+    fwrite(&index->count, sizeof(int), 1, f);
+    fwrite(index->entries, sizeof(IndexEntry), index->count, f);
+
+    fclose(f);
+    return 0;
 }
 
 // Stage a file for the next commit.
