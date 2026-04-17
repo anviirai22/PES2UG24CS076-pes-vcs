@@ -180,8 +180,36 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
 //
 // The caller is responsible for calling free(*data_out).
 // Returns 0 on success, -1 on error (file not found, corrupt, etc.).
-int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_t *len_out) {
-    // TODO: Implement
-    (void)id; (void)type_out; (void)data_out; (void)len_out;
-    return -1;
+int object_read(const ObjectID *id, void **data_out, sze_t *size_out, ObjectType *type_out) {
+    char hash_str[65];
+    object_id_to_string(id, hash_str);
+
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), ".pes/objects/%.2s/%s", hash_str, hash_str + 2);
+
+    // 1. Open and read the whole file
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) return -1;
+
+    struct stat st;
+    fstat(fd, &st);
+    
+    char *buf = malloc(st.st_size);
+    read(fd, buf, st.st_size);
+    close(fd);
+
+    // 2. Parse the header: "type size\0data"
+    // The type is at the start of the buffer
+    *type_out = string_to_object_type(buf);
+    
+    // Find the null terminator to know where the data starts
+    size_t header_len = strlen(buf) + 1;
+    *size_out = st.st_size - header_len;
+
+    // 3. Extract the actual data
+    *data_out = malloc(*size_out);
+    memcpy(*data_out, buf + header_len, *size_out);
+
+    free(buf);
+    return 0;
 }
