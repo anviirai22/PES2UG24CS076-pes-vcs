@@ -15,6 +15,7 @@
 // PROVIDED functions: index_find, index_remove, index_status
 // TODO functions:     index_load, index_save, index_add
 
+#include "pes.h"
 #include "index.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -195,6 +196,48 @@ int index_save(const Index *index) {
 int index_add(Index *index, const char *path) {
     // TODO: Implement file staging
     // (See Lab Appendix for logical steps)
-    (void)index; (void)path;
-    return -1;
+    // 1. Get file metadata (size, time, permissions)
+    struct stat st;
+    if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return -1;
+
+    // 2. Read the actual file content
+    FILE *f = fopen(path, "rb");
+    if (!f) return -1;
+    
+    void *data = malloc(st.st_size);
+    if (fread(data, 1, st.st_size, f) != (size_t)st.st_size) {
+        free(data);
+        fclose(f);
+        return -1;
+    }
+    fclose(f);
+
+    // 3. Store as a BLOB in your Phase 1 Object Store
+    ObjectID blob_id;
+    if (object_write(OBJ_BLOB, data, st.st_size, &blob_id) != 0) {
+        free(data);
+        return -1;
+    }
+    free(data);
+
+    // 4. Update the index list
+    // Use your existing index_find to see if the file is already staged
+    IndexEntry *entry = index_find(index, path);
+    if (!entry) {
+        // New file? Add it to the end of the list
+        if (index->count >= MAX_INDEX_ENTRIES) return -1;
+        entry = &index->entries[index->count++];
+        strncpy(entry->path, path, sizeof(entry->path) - 1);
+        entry->path[sizeof(entry->path) - 1] = '\0';
+    }
+
+    // Set the metadata for this entry
+    entry->hash = blob_id;
+    entry->size = (uint32_t)st.st_size;
+    entry->mtime_sec = (uint32_t)st.st_mtime;
+    entry->mode = st.st_mode;
+
+    // 5. Save the updated list back to the disk
+    return index_save(index);
 }
+
