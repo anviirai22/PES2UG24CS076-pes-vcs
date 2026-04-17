@@ -107,12 +107,32 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
 
     // 4. Check if object already exists (deduplication)
     if (object_exists(id_out)) {
+    
         return 0;
     }
-//hashing logic
-    // (We will add the writing logic in the next commit)
+    // 5. Create path strings
+    char hash_str[65];
+    object_id_to_string(id_out, hash_str);
+
+    char dir_path[PATH_MAX];
+    char final_path[PATH_MAX];
+    
+    // Construct the shard directory path (.pes/objects/XX)
+    snprintf(dir_path, sizeof(dir_path), ".pes/objects/%.2s", hash_str);
+    
+    // Construct the full object path (.pes/objects/XX/rest_of_hash)
+    snprintf(final_path, sizeof(final_path), "%s/%s", dir_path, hash_str + 2);
+
+    // 6. Create the directories
+    mkdir(".pes/objects", 0755); // Ensure root exists
+    mkdir(dir_path, 0755);       // Create the shard folder
+
     return 0; 
 }
+//hashing logic
+    // (We will add the writing logic in the next commit)
+    
+
 
 // Read an object from the store.
 //
