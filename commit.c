@@ -239,6 +239,9 @@ int commit_create(const char *message, ObjectID *commit_id) {
     
     // Clean up memory from serialization
     free(data);
+    if (head_update(commit_id) != 0) {
+        return -1;
+    }
     
     // Logic continues in next commit...
     return 0; // Placeholder
