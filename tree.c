@@ -139,7 +139,19 @@ int tree_from_index(ObjectID *id_out) {
     // For now, let's just create a flat tree structure
     Tree tree;
     tree.count = 0;
-    
+    for (int i = 0; i < index.count; i++) {
+        if (tree.count >= MAX_TREE_ENTRIES) break;
+
+        TreeEntry *te = &tree.entries[tree.count++];
+        
+        // Copy the filename from the index to the tree entry
+        strncpy(te->name, index.entries[i].path, sizeof(te->name) - 1);
+        te->name[sizeof(te->name) - 1] = '\0';
+
+        // Copy the metadata and the hash
+        te->mode = index.entries[i].mode;
+        te->hash = index.entries[i].hash;
+    }
     // Logic will be added in next commits...
     return 0;
 }
