@@ -212,6 +212,16 @@ int commit_create(const char *message, ObjectID *commit_id) {
         // If head_read fails, this is likely the first commit in the repo
         commit.has_parent = 0;
     }
+    // 4. Fill in metadata (Author, Time, and Message)
+    
+    // Get the author name from the pes_author() helper function
+    strncpy(commit.author, pes_author(), sizeof(commit.author) - 1);
+    
+    // Get current Unix timestamp
+    commit.timestamp = (uint64_t)time(NULL);
+    
+    // Copy the user's commit message
+    strncpy(commit.message, message, sizeof(commit.message) - 1);
     
     // Logic continues in next commit...
     return 0; // Placeholder
