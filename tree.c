@@ -153,5 +153,15 @@ int tree_from_index(ObjectID *id_out) {
         te->hash = index.entries[i].hash;
     }
     // Logic will be added in next commits...
-    return 0;
+    void *data = NULL;
+    size_t len = 0;
+    if (tree_serialize(&tree, &data, &len) != 0) {
+        return -1;
+    }
+
+    // --- ADD COMMIT 4 CODE HERE ---
+    int ret = object_write(OBJ_TREE, data, len, id_out);
+    free(data); // Important: tree_serialize uses malloc
+
+    return ret;
 }
