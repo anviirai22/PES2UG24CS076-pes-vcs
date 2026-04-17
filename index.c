@@ -39,20 +39,25 @@ IndexEntry* index_find(Index *index, const char *path) {
 // Remove a file from the index.
 // Returns 0 on success, -1 if path not in index.
 int index_remove(Index *index, const char *path) {
+    int found_idx = -1;
     for (int i = 0; i < index->count; i++) {
         if (strcmp(index->entries[i].path, path) == 0) {
-            int remaining = index->count - i - 1;
-            if (remaining > 0)
-                memmove(&index->entries[i], &index->entries[i + 1],
-                        remaining * sizeof(IndexEntry));
-            index->count--;
-            return index_save(index);
+            found_idx = i;
+            break;
         }
     }
-    fprintf(stderr, "error: '%s' is not in the index\n", path);
-    return -1;
-}
 
+    if (found_idx == -1) return -1; // File not in index
+
+    // Shift entries left to fill the gap
+    for (int i = found_idx; i < index->count - 1; i++) {
+        index->entries[i] = index->entries[i + 1];
+    }
+    index->count--;
+
+    // CHANGE THIS: Ensure the index is saved after removal
+    return index_save(index); 
+}
 // Print the status of the working directory.
 //
 // Identifies files that are staged, unstaged (modified/deleted in working dir),
