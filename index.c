@@ -245,4 +245,10 @@ int index_add(Index *index, const char *path) {
     // 5. Save the updated list back to the disk
     return index_save(index);
 }
+// Free the memory allocated for the index.
+void index_free(Index *index) {
+    if (index != NULL) {
+        free(index);
+    }
+}
 
