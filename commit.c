@@ -222,6 +222,23 @@ int commit_create(const char *message, ObjectID *commit_id) {
     
     // Copy the user's commit message
     strncpy(commit.message, message, sizeof(commit.message) - 1);
+    // 5. Serialize the commit and write it to the object store
+    void *data = NULL;
+    size_t len = 0;
+    
+    // Convert the struct into binary/text format for storage
+    if (commit_serialize(&commit, &data, &len) != 0) {
+        return -1;
+    }
+
+    // Write the actual file to .pes/objects
+    if (object_write(OBJ_COMMIT, data, len, commit_id) != 0) {
+        free(data);
+        return -1;
+    }
+    
+    // Clean up memory from serialization
+    free(data);
     
     // Logic continues in next commit...
     return 0; // Placeholder
