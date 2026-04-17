@@ -109,7 +109,7 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     if (object_exists(id_out)) {
         return 0;
     }
-
+//hashing logic
     // (We will add the writing logic in the next commit)
     return 0; 
 }
