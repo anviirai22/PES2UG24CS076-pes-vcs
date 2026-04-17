@@ -126,6 +126,30 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     // 6. Create the directories
     mkdir(".pes/objects", 0755); // Ensure root exists
     mkdir(dir_path, 0755);       // Create the shard folder
+    // 7. Write to a temporary file (Step 5 in your hints)
+    char temp_path[PATH_MAX];
+    snprintf(temp_path, sizeof(temp_path), "%s/tmp_XXXXXX", dir_path);
+
+    int fd = mkstemp(temp_path);
+    if (fd < 0) return -1;
+
+    // Write the header first, then the data
+    if (write(fd, header, header_len) != header_len) {
+        close(fd); unlink(temp_path); return -1;
+    }
+    if (write(fd, data, len) != (ssize_t)len) {
+        close(fd); unlink(temp_path); return -1;
+    }
+
+    // 8. Flush to disk and close (Step 6 in your hints)
+    fsync(fd);
+    close(fd);
+
+    // 9. Rename temp file to final path (Step 7 in your hints)
+    if (rename(temp_path, final_path) < 0) {
+        unlink(temp_path);
+        return -1;
+    }
 
     return 0; 
 }
