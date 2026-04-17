@@ -159,6 +159,7 @@ int tree_from_index(ObjectID *id_out) {
         return -1;
     }
 
+
     // --- ADD COMMIT 4 CODE HERE ---
     int ret = object_write(OBJ_TREE, data, len, id_out);
     free(data); // Important: tree_serialize uses malloc
