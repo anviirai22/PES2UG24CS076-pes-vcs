@@ -137,8 +137,23 @@ int index_status(const Index *index) {
 int index_load(Index *index) {
     // TODO: Implement index loading
     // (See Lab Appendix for logical steps)
-    (void)index;
-    return -1;
+    // 1. Initialize memory
+    memset(index, 0, sizeof(Index));
+
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "%s/index", PES_DIR);
+
+    // 2. Open binary file
+    FILE *f = fopen(path, "rb");
+    if (!f) return 0; // If file doesn't exist, count is 0, which is fine
+
+    // 3. Read count and entries
+    if (fread(&index->count, sizeof(int), 1, f) == 1) {
+        fread(index->entries, sizeof(IndexEntry), index->count, f);
+    }
+
+    fclose(f);
+    return 0;
 }
 
 // Save the index to .pes/index atomically.
