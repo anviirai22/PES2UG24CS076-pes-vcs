@@ -204,6 +204,14 @@ int commit_create(const char *message, ObjectID *commit_id) {
     Commit commit;
     memset(&commit, 0, sizeof(Commit));
     commit.tree = tree_id;
+    // 3. Read current HEAD to find the parent commit
+    // head_read returns 0 if it successfully finds a commit hash in HEAD
+    if (head_read(&commit.parent) == 0) {
+        commit.has_parent = 1;
+    } else {
+        // If head_read fails, this is likely the first commit in the repo
+        commit.has_parent = 0;
+    }
     
     // Logic continues in next commit...
     return 0; // Placeholder
