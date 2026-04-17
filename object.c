@@ -94,9 +94,24 @@ int object_exists(const ObjectID *id) {
 //
 // Returns 0 on success, -1 on error.
 int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out) {
-    // TODO: Implement
-    (void)type; (void)data; (void)len; (void)id_out;
-    return -1;
+    // 1. Get the string version of the type (blob, tree, or commit)
+    const char *type_str = object_type_to_string(type);
+
+    // 2. Build the header: "type size\0"
+    char header[64];
+    int header_len = sprintf(header, "%s %zu", type_str, len) + 1;
+
+    // 3. Compute SHA-256 hash of the FULL object (header + data)
+    // We use a helper that hashes two buffers together
+    compute_hash_double(header, header_len, data, len, id_out);
+
+    // 4. Check if object already exists (deduplication)
+    if (object_exists(id_out)) {
+        return 0;
+    }
+
+    // (We will add the writing logic in the next commit)
+    return 0; 
 }
 
 // Read an object from the store.
